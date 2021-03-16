@@ -1,0 +1,107 @@
+########################################################################################################################
+### ARCH
+arch:
+    seed: 42                   # Random seed for Pytorch/Numpy initialization
+    min_epochs: 1              # Minimum number of epochs
+    max_epochs: 50              # Maximum number of epochs
+########################################################################################################################
+### CHECKPOINT
+checkpoint:
+    filepath: './trained_models'         # Checkpoint filepath to save data
+    save_top_k: -1           # Number of best models to save
+    monitor: 'abs_rel'         # Metric to monitor for logging
+    monitor_index: 0        # Dataset index for the metric to monitor
+    mode: 'auto'            # Automatically determine direction of improvement (increase or decrease)
+    s3_path: ''             # s3 path for AWS model syncing
+    s3_frequency: 1         # How often to s3 sync
+
+model:
+    name: 'GenericSelfSupModel'
+    # checkpoint_path: './pretrained_models/omnicam_pretrained.ckpt'        # Checkpoint path for model saving
+    optimizer:
+        name: 'Adam'
+        depth:
+            lr: 0.0002
+        pose:
+            lr: 0.0002
+    scheduler:
+        name: 'StepLR'
+        step_size: 30
+        gamma: 0.5
+    depth_net:
+        name: 'RaySurfaceResNet'
+        version: '18pt'
+    pose_net:
+        name: 'PoseResNet'
+        version: '18pt'
+    params:
+        crop: 'garg'
+        min_depth: 0.0
+        max_depth: 80.0
+datasets:
+    augmentation:
+        image_shape: (384, 384)
+    train:
+        batch_size: 4
+        dataset: ['Image']
+        path: ['./data/datasets/ValetParking/2019_07_24/2019_07_24_drive_133346/image_03/data',
+               './data/datasets/ValetParking/2019_07_24/2019_07_24_drive_134102/image_03/data',
+               './data/datasets/ValetParking/2019_07_25/2019_07_25_drive_160359/image_03/data',
+               './data/datasets/ValetParking/2019_07_29/2019_07_29_drive_152050/image_03/data',
+               './data/datasets/ValetParking/2019_07_30/2019_07_30_drive_164118/image_03/data',
+               './data/datasets/ValetParking/2021_02_25/2021_02_25_drive_104839/image_03/data',
+               './data/datasets/ValetParking/2021_02_25/2021_02_25_drive_105017/image_03/data',
+               './data/datasets/ValetParking/2021_02_25/2021_02_25_drive_105410/image_03/data',
+               './data/datasets/ValetParking/2021_02_25/2021_02_25_drive_105644/image_03/data',
+               './data/datasets/ValetParking/2021_02_25/2021_02_25_drive_105823/image_03/data'
+               ]
+        split: ['{:010}',
+                '{:010}',
+                '{:010}',
+                '{:010}',
+                '{:010}',
+                '{:010}',
+                '{:010}',
+                '{:010}',
+                '{:010}',
+                '{:010}'
+                ]
+        depth_type: ['']
+        repeat: [2]
+
+    # validation:
+    #     dataset: ['Image']
+    #     path: ['./data/datasets/ValetParking/2019_07_25/2019_07_25_drive_160359/image_03/data']
+    #     split: ['{:010}']
+    #     depth_type: ['']
+    # test:
+    #     dataset: ['Image']
+    #     path: ['./data/datasets/ValetParking/2019_07_25/2019_07_25_drive_160359/image_03/data']
+    #     split: ['{:010}']
+    #     depth_type: ['']
+        
+    ### DATASETS.VALIDATION    
+    validation:
+        batch_size: 1                   # Validation batch size
+        num_workers: 8                  # Validation number of workers
+        back_context: 0                 # Validation backward context
+        forward_context: 0              # Validation forward context
+        dataset: ['ValetParking']
+        path: ['./data/datasets/ValetParking']
+        split: ['data_splits/val_rear_camera_03_04_2021.txt',
+                'data_splits/test_rear_camera_03_04_2021.txt']
+        depth_type: ['']
+        cameras: [[]]                   # Validation cameras (double list, one for each dataset)
+        num_logs: 2                     # Number of validation images to log
+    
+    ### DATASETS.TEST
+    test:
+        batch_size: 1                   # Test batch size
+        num_workers: 8                  # Test number of workers
+        back_context: 0                 # Test backward context
+        forward_context: 0              # Test forward context
+        dataset: ['ValetParking']
+        path: ['./data/datasets/ValetParking']
+        split: ['data_splits/test_rear_camera_03_04_2021.txt']
+        cameras: [[]]                   # Test cameras (double list, one for each dataset)
+        num_logs: 2                     # Number of test images to log
